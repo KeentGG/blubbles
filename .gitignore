@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.npmcache/
+.home/
+.work/
+shots/
+*.log
+.browser/
+out/

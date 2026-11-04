@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blubbles Studio: animated clay bot avatars</title>
+<meta name="description" content="Make a clay bot, give it a face, and export it as an animated avatar in WebP, APNG or GIF." />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%23121613'/%3E%3Ccircle cx='39' cy='48' r='5' fill='%23f7f8f5'/%3E%3Ccircle cx='61' cy='48' r='5' fill='%23f7f8f5'/%3E%3C/svg%3E" />
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('blubbles.theme');
+      if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  })();
+</script>
+<link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<noscript><p class="noscript">This studio needs JavaScript to draw the bot.</p></noscript>
+<a class="skip" href="#panel">Skip to controls</a>
+
+<header class="topbar">
+  <a class="brand" href="/" aria-label="Blubbles Studio home">
+    <span class="brand-mark" id="brand-mark" aria-hidden="true"></span>
+    <span class="brand-word">blubbles</span>
+    <span class="brand-tag">studio</span>
+  </a>
+  <div class="topbar-actions">
+    <span class="link-state" id="link-state" aria-live="polite">Link saves your bot</span>
+    <button type="button" class="text-btn" id="copy-link">Copy link</button>
+    <button type="button" class="text-btn" id="about-open">About</button>
+    <button type="button" class="theme-btn" id="theme-toggle" aria-label="Switch to dark theme">
+      <span class="theme-dot" aria-hidden="true"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</header>
+
+<main class="shell">
+  <section class="stage-col" aria-label="Live preview">
+    <div class="stage" id="stage" data-bg="paper">
+      <div class="stage-top">
+        <div class="live-pill"><span class="live-dot" aria-hidden="true"></span>Live</div>
+        <div class="stage-tools">
+          <button type="button" class="ghost-btn is-on" id="follow-toggle" aria-pressed="true" title="Eyes follow your cursor">Follow</button>
+          <button type="button" class="ghost-btn" id="play-toggle" title="Pause the animation">Pause</button>
+          <button type="button" class="ghost-btn" id="bg-toggle" title="Change the backdrop">Paper</button>
+        </div>
+      </div>
+
+      <div class="preview-wrap">
+        <div class="floor" aria-hidden="true"></div>
+        <div class="preview" id="preview" aria-hidden="true"></div>
+      </div>
+
+      <button type="button" class="stage-bell" id="bell" aria-label="Notification bell. Drag or use the arrow keys to move it.">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 3.2a5.4 5.4 0 0 0-5.4 5.4v3.1l-1.5 2.7a1 1 0 0 0 .9 1.5h12a1 1 0 0 0 .9-1.5l-1.5-2.7V8.6A5.4 5.4 0 0 0 12 3.2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M9.8 18.2a2.3 2.3 0 0 0 4.4 0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <div class="stage-bottom">
+        <p class="caption" id="caption">Circle <span>/</span> Neutral <span>/</span> Blue</p>
+        <p class="caption-note" id="caption-note">Move your cursor. It will look.</p>
+      </div>
+    </div>
+
+    <div class="moves" aria-label="Play a move">
+      <div class="moves-head">
+        <span class="micro">Moves</span>
+        <span class="micro muted">Tap to play</span>
+      </div>
+      <div class="move-list" id="moves"></div>
+    </div>
+
+    <div class="moments" aria-label="Moments">
+      <div class="moves-head">
+        <span class="micro">Moments</span>
+        <span class="micro muted">Tap to play</span>
+      </div>
+      <div class="moment-presets" id="moment-presets">
+        <button type="button" class="move-btn moment-btn" data-moment="newNotification">New notification</button>
+        <button type="button" class="move-btn moment-btn" data-moment="success">Success</button>
+        <button type="button" class="move-btn moment-btn" data-moment="error">Error</button>
+        <button type="button" class="move-btn moment-btn" data-moment="greeting">Greeting</button>
+        <button type="button" class="move-btn moment-btn" data-moment="thinkingDone">Thinking done</button>
+      </div>
+
+      <div class="moment-status">
+        <span id="moment-status" aria-live="polite">Ready</span>
+        <button type="button" class="small-btn" id="moment-stop" disabled>Stop</button>
+      </div>
+
+      <label class="micro moment-label" for="moment-json">Your own</label>
+      <textarea id="moment-json" class="moment-json" spellcheck="false" aria-describedby="moment-hint moment-error">[{ "face":"surprised", "look":"#bell", "play":"notify" }, { "wait":0.4 }, { "face":"happy", "hold":0.6 }]</textarea>
+      <div class="moment-actions">
+        <button type="button" class="small-btn" id="moment-play">Play</button>
+        <span class="micro muted" id="moment-hint">Ctrl / Cmd + Enter</span>
+      </div>
+      <p class="moment-error" id="moment-error" role="status" hidden></p>
+    </div>
+  </section>
+
+  <aside class="panel" id="panel">
+    <div class="panel-head">
+      <div>
+        <h1>Make a bot.</h1>
+        <p class="lede">Pick a body, a face and a colour. It breathes, blinks and follows your cursor.</p>
+      </div>
+      <button type="button" class="surprise" id="surprise">Surprise me</button>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Bot parts">
+      <button type="button" role="tab" class="tab is-active" id="tab-shape" aria-selected="true" aria-controls="pane-shape" data-pane="shape">Shape <span class="count">8</span></button>
+      <button type="button" role="tab" class="tab" id="tab-face" aria-selected="false" aria-controls="pane-face" data-pane="face" tabindex="-1">Face <span class="count">16</span></button>
+      <button type="button" role="tab" class="tab" id="tab-color" aria-selected="false" aria-controls="pane-color" data-pane="color" tabindex="-1">Colour <span class="count">12</span></button>
+      <button type="button" role="tab" class="tab" id="tab-wear" aria-selected="false" aria-controls="pane-wear" data-pane="wear" tabindex="-1">Wear <span class="count">4</span></button>
+    </div>
+
+    <div class="pane" id="pane-shape" role="tabpanel" aria-labelledby="tab-shape">
+      <div class="shape-grid" id="shape-grid"></div>
+    </div>
+
+    <div class="pane" id="pane-face" role="tabpanel" aria-labelledby="tab-face" hidden>
+      <div class="face-grid" id="face-grid"></div>
+    </div>
+
+    <div class="pane" id="pane-color" role="tabpanel" aria-labelledby="tab-color" hidden>
+      <div class="swatch-grid" id="swatch-grid"></div>
+      <div class="color-readout">
+        <div class="color-name">
+          <span class="swatch-chip" id="color-chip" aria-hidden="true"></span>
+          <span id="color-label">Blue</span>
+        </div>
+        <div class="custom-color">
+          <label for="hex-input">Hex</label>
+          <input id="hex-input" type="text" inputmode="text" spellcheck="false" maxlength="7" value="#3b93f0" aria-label="Custom hex colour" />
+          <button type="button" class="pick-btn" id="pick-color" aria-label="Pick a custom colour">Pick</button>
+          <input type="color" id="native-color" value="#3b93f0" class="native-color" tabindex="-1" aria-hidden="true" />
+        </div>
+      </div>
+    </div>
+
+    <div class="pane" id="pane-wear" role="tabpanel" aria-labelledby="tab-wear" hidden>
+      <div class="wear-grid" id="wear-grid"></div>
+      <div class="wear-colors">
+        <label class="wear-unify" id="wear-unify" hidden>
+          <input type="checkbox" id="wear-unify-input">
+          <span id="wear-unify-label">Same colour</span>
+        </label>
+        <div id="wear-rows"></div>
+        <p class="small-note" id="wear-empty">Put something on to choose its colour.</p>
+      </div>
+    </div>
+
+    <div class="finish-row">
+      <div>
+        <span class="micro">Finish</span>
+        <p class="small-note" id="finish-note">Clay adds the light.</p>
+      </div>
+      <div class="seg" role="group" aria-label="Finish">
+        <button type="button" class="seg-btn is-on" data-finish="clay">Clay</button>
+        <button type="button" class="seg-btn" data-finish="flat">Flat</button>
+      </div>
+    </div>
+
+    <section class="export" aria-labelledby="export-title">
+      <div class="export-head">
+        <h2 id="export-title">Export</h2>
+        <span class="micro muted" id="export-summary">Idle loop / seamless</span>
+      </div>
+
+      <div class="format-row" role="group" aria-label="Animation format" id="format-row">
+        <button type="button" class="format-btn is-on" data-format="webp">WebP</button>
+        <button type="button" class="format-btn" data-format="apng">APNG</button>
+        <button type="button" class="format-btn" data-format="gif">GIF</button>
+        <button type="button" class="format-btn" data-format="mp4">MP4</button>
+      </div>
+
+      <div class="settings-grid">
+        <label class="field">
+          <span class="micro">Size</span>
+          <select id="size-select">
+            <option value="256">256 px</option>
+            <option value="512" selected>512 px</option>
+            <option value="1024">1024 px</option>
+            <option value="128">128 px</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="micro">Length</span>
+          <select id="duration-select">
+            <option value="6.8">6.8 s</option>
+            <option value="10.2" selected>10.2 s</option>
+            <option value="13.6">13.6 s</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="micro">Rate</span>
+          <select id="fps-select">
+            <option value="15">15 fps</option>
+            <option value="24">24 fps</option>
+            <option value="30" selected>30 fps</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="bg-row">
+        <span class="micro">Backdrop</span>
+        <div class="seg" role="group" aria-label="Export backdrop" id="bg-seg">
+          <button type="button" class="seg-btn is-on" data-bg="transparent">Clear</button>
+          <button type="button" class="seg-btn" data-bg="ink">Ink</button>
+          <button type="button" class="seg-btn" data-bg="paper">Paper</button>
+        </div>
+      </div>
+
+      <p class="format-hint" id="format-hint">Animated WebP keeps soft alpha and stays small. Good everywhere modern.</p>
+
+      <button type="button" class="primary" id="export-btn">
+        <span id="export-label">Render animation</span>
+        <span class="primary-meta" id="export-meta">10.2 s</span>
+      </button>
+
+      <div class="progress" id="progress" hidden role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="progress-label">
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="progress-line"><span id="progress-label">Rendering frames</span><span id="progress-pct">0%</span></div>
+      </div>
+
+      <div class="done" id="done" hidden>
+        <span id="done-text">Ready</span>
+        <a id="done-link" href="#" download>Download again</a>
+      </div>
+
+      <div class="still-row">
+        <span class="micro">Still frame</span>
+        <div class="still-actions">
+          <button type="button" class="small-btn" id="download-png">PNG</button>
+          <button type="button" class="small-btn" id="download-svg">SVG</button>
+        </div>
+      </div>
+      <p class="small-note" id="estimate">About 2.9 MB, 306 frames.</p>
+    </section>
+  </aside>
+</main>
+
+<footer class="footer">
+  <p>Built on a small deterministic renderer. Renders on your machine.</p>
+  <p class="mono">runs locally</p>
+</footer>
+
+<dialog id="about" class="about" aria-labelledby="about-title">
+  <div class="about-head">
+    <h2 id="about-title">About this studio</h2>
+    <button type="button" class="text-btn" id="about-close">Close</button>
+  </div>
+  <p>The bot in the middle is drawn by a small deterministic engine: a 64-point silhouette, a projected pair of eyes, and a set of idle motions layered on top. The same code draws the preview, the stills and every exported frame.</p>
+  <h3>Taking it with you</h3>
+  <p><strong>WebP</strong> is the best all rounder: soft edges, transparent background, small file. <strong>APNG</strong> is lossless but heavier. <strong>GIF</strong> works almost everywhere odd, but only has one transparent colour, so edges are harder and 512 px gets heavy. <strong>MP4</strong> has no alpha, so it renders on Ink or Paper.</p>
+  <p>Stills use the current frame and the export backdrop you picked. Animated exports always render the idle loop, starting at a phase chosen to land between blinks.</p>
+  <h3>Credit</h3>
+  <p>The blub character design is credited to Jeremy Perret. He is not officially affiliated with Grok bot.</p>
+  <div class="about-foot">
+    <span class="mono">no accounts / no uploads</span>
+    <button type="button" class="small-btn" id="about-ok">Got it</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>

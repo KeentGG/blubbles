@@ -1,0 +1,58 @@
+{
+  "name": "blubbles",
+  "version": "0.1.0",
+  "description": "A local studio for animated clay bot avatars with PNG, SVG, WebP, APNG, GIF and MP4 export.",
+  "license": "MIT",
+  "repository": "https://github.com/KeentGG/blubbles",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "README.md"
+  ],
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./engine": {
+      "types": "./dist/engine-entry.d.ts",
+      "import": "./dist/engine-entry.js"
+    }
+  },
+  "scripts": {
+    "build": "node scripts/clean-dist.mjs && tsc -p tsconfig.json",
+    "start": "npm run build && node server.mjs",
+    "avatar": "node make-avatar.mjs",
+    "snapshot": "node scripts/snapshot.mjs",
+    "verify": "node verify.mjs",
+    "verify:dom": "node verify-dom.mjs",
+    "verify:golden": "node scripts/verify-golden.mjs",
+    "test": "npm run build && npm run test:unit && node verify.mjs && node scripts/verify-golden.mjs && node verify-dom.mjs && node verify-studio.mjs",
+    "test:unit": "node --test test/*.test.mjs",
+    "bench": "node --expose-gc scripts/bench.mjs",
+    "clean": "node scripts/clean-dist.mjs",
+    "preavatar": "npm run build",
+    "preverify": "npm run build",
+    "preverify:dom": "npm run build",
+    "preverify:golden": "npm run build",
+    "presnapshot": "npm run build",
+    "prebench": "npm run build",
+    "prepack": "npm run build",
+    "preverify:studio": "npm run build",
+    "verify:studio": "node verify-studio.mjs"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "playwright-core": "^1.64.1",
+    "typescript": "^5.9.3",
+    "@resvg/resvg-js": "^2.6.2"
+  },
+  "sideEffects": false
+}
